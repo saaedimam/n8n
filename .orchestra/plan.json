@@ -1,0 +1,10 @@
+{
+  "version": 1,
+  "governance": {
+    "pr_only": true,
+    "budgets": { "lcp_ms": 2500, "cls": 0.05, "lighthouse_min": 85 }
+  },
+  "mcp_roles": ["coder","debugger","designer","seo","deploy","git"],
+  "terminals": ["dev","lint","test"]
+}
+
