@@ -1,0 +1,24 @@
+[
+  {
+    "file": ".workflows\\example-workflow.json",
+    "workflowId": "workflow-1758690990212-wxputwimf",
+    "action": "imported",
+    "activated": true,
+    "tags": [
+      "cursor",
+      "auto",
+      "release"
+    ]
+  },
+  {
+    "file": ".workflows\\cursor-deploy-pipeline.json",
+    "workflowId": "workflow-1758690990212-5ky2y3cwe",
+    "action": "imported",
+    "activated": true,
+    "tags": [
+      "cursor",
+      "auto",
+      "release"
+    ]
+  }
+]

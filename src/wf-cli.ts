@@ -89,23 +89,31 @@ async function main() {
     // Verify folder exists
     const folderPath = path.join(process.cwd(), folder);
     try {
-      await exec(`test -d "${folderPath}"`);
+      // Use a cross-platform way to check if directory exists
+      const fs = await import('fs');
+      if (!fs.existsSync(folderPath)) {
+        console.log("__WF_FOLDER_MISSING__");
+        process.exit(1);
+      }
     } catch {
       console.log("__WF_FOLDER_MISSING__");
       process.exit(1);
     }
     
     // Find all JSON files
-    const pattern = path.join(folderPath, "**", "*.json");
+    const pattern = path.join(folderPath, "**", "*.json").replace(/\\/g, '/');
     const files = await glob(pattern);
     
-    if (files.length === 0) {
+    // Filter out the report file itself
+    const workflowFiles = files.filter(file => !file.endsWith('_import-report.json'));
+    
+    if (workflowFiles.length === 0) {
       console.log("No JSON files found in the specified folder");
       process.exit(0);
     }
     
     // Limit to 200 files
-    const limitedFiles = files.slice(0, 200);
+    const limitedFiles = workflowFiles.slice(0, 200);
     
     let importedCount = 0;
     let activatedCount = 0;
@@ -222,6 +230,12 @@ async function callMCPTool(server: string, tool: string, args: any): Promise<any
   throw new Error(`Unknown MCP tool: ${tool}`);
 }
 
-if (import.meta.url === `file://${process.argv[1]}`) {
+// Check if this file is being run directly
+const isMainModule = import.meta.url === `file://${process.argv[1]}` || 
+                     import.meta.url.endsWith(process.argv[1]) ||
+                     process.argv[1].endsWith('wf-cli.js') ||
+                     process.argv[1].endsWith('wf-cli.ts');
+
+if (isMainModule) {
   main().catch(console.error);
 }

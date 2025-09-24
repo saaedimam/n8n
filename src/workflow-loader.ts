@@ -117,10 +117,13 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         }
         
         // Find all JSON files
-        const pattern = path.join(folderPath, "**", "*.json");
+        const pattern = path.join(folderPath, "**", "*.json").replace(/\\/g, '/');
         const files = await glob(pattern);
         
-        if (files.length === 0) {
+        // Filter out the report file itself
+        const workflowFiles = files.filter(file => !file.endsWith('_import-report.json'));
+        
+        if (workflowFiles.length === 0) {
           return {
             content: [{ 
               type: "text", 
@@ -130,7 +133,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         }
         
         // Limit to 200 files
-        const limitedFiles = files.slice(0, 200);
+        const limitedFiles = workflowFiles.slice(0, 200);
         
         let importedCount = 0;
         let activatedCount = 0;

@@ -14,8 +14,8 @@
     },
     {
       "parameters": {
-        "owner": "YOUR_GITHUB_USER_OR_ORG",
-        "repository": "YOUR_REPO_NAME",
+        "owner": "saaedimam",
+        "repository": "n8n",
         "additionalFields": {
           "branch": "={{$json[\"branch\"]}}",
           "commitMessage": "Automated deploy commit",
