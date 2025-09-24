@@ -1,0 +1,107 @@
+{
+  "name": "Cursor Deploy Pipeline",
+  "nodes": [
+    {
+      "parameters": {
+        "path": "cursor-deploy",
+        "options": {}
+      },
+      "id": "1",
+      "name": "Webhook - Deploy Trigger",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [250, 300]
+    },
+    {
+      "parameters": {
+        "owner": "YOUR_GITHUB_USER_OR_ORG",
+        "repository": "YOUR_REPO_NAME",
+        "additionalFields": {
+          "branch": "={{$json[\"branch\"]}}",
+          "commitMessage": "Automated deploy commit",
+          "fileContent": "PLACEHOLDER",
+          "binaryData": false
+        }
+      },
+      "id": "2",
+      "name": "GitHub - Push Branch",
+      "type": "n8n-nodes-base.github",
+      "typeVersion": 2,
+      "position": [550, 200],
+      "credentials": {
+        "githubApi": { "id": "YOUR_GITHUB_CRED_ID" }
+      }
+    },
+    {
+      "parameters": {
+        "owner": "YOUR_GITHUB_USER_OR_ORG",
+        "repository": "YOUR_REPO_NAME",
+        "title": "={{$json[\"title\"]}}",
+        "body": "={{$json[\"body\"] || \"Auto PR from n8n\"}}",
+        "head": "={{$json[\"branch\"]}}",
+        "base": "main"
+      },
+      "id": "3",
+      "name": "GitHub - Create PR",
+      "type": "n8n-nodes-base.github",
+      "typeVersion": 2,
+      "position": [800, 200],
+      "credentials": {
+        "githubApi": { "id": "YOUR_GITHUB_CRED_ID" }
+      }
+    },
+    {
+      "parameters": {
+        "authentication": "predefinedCredentialType",
+        "requestMethod": "POST",
+        "url": "https://api.vercel.com/v13/deployments",
+        "jsonParameters": true,
+        "sendHeaders": true,
+        "headerParametersUi": {
+          "parameter": [
+            { "name": "Authorization", "value": "Bearer {{$credentials.vercelAccessToken}}" },
+            { "name": "Content-Type", "value": "application/json" }
+          ]
+        },
+        "bodyParametersJson": "={\"gitSource\":{\"ref\":\"{{$json[\"branch\"]}}\",\"repoId\":\"YOUR_GITHUB_USER_OR_ORG/YOUR_REPO_NAME\"}}"
+      },
+      "id": "4",
+      "name": "Vercel - Deploy Preview",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 3,
+      "position": [1050, 200],
+      "credentials": {
+        "httpBasicAuth": { "id": "YOUR_VERCEL_CRED_ID" }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "={{$env.TELEGRAM_CHAT_ID}}",
+        "text": "🚀 Deploy triggered\nBranch: {{$json[\"branch\"]}}\nPR: {{$json[\"title\"]}}\nPreview: {{ $json[\"previewUrl\"] || \"Check Vercel\" }}",
+        "additionalFields": {}
+      },
+      "id": "5",
+      "name": "Telegram - Notify",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1,
+      "position": [1300, 200],
+      "credentials": {
+        "telegramApi": { "id": "YOUR_TELEGRAM_CRED_ID" }
+      }
+    }
+  ],
+  "connections": {
+    "Webhook - Deploy Trigger": {
+      "main": [[{ "node": "GitHub - Push Branch", "type": "main", "index": 0 }]]
+    },
+    "GitHub - Push Branch": {
+      "main": [[{ "node": "GitHub - Create PR", "type": "main", "index": 0 }]]
+    },
+    "GitHub - Create PR": {
+      "main": [[{ "node": "Vercel - Deploy Preview", "type": "main", "index": 0 }]]
+    },
+    "Vercel - Deploy Preview": {
+      "main": [[{ "node": "Telegram - Notify", "type": "main", "index": 0 }]]
+    }
+  }
+}
